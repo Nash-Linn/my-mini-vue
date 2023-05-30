@@ -1,15 +1,21 @@
+const effectStack = [];
 let activeEffect;
 
-export function effect(fn) {
+export function effect(fn, option = {}) {
   const effectFn = () => {
     try {
       activeEffect = effectFn;
+      effectStack.push(activeEffect);
       return fn();
     } finally {
-      //todo
+      effectStack.pop();
+      activeEffect = effectStack[effectStack.length - 1];
     }
   };
-  effectFn();
+  if (!option.lazy) {
+    effectFn();
+  }
+  effectFn.scheduler = option.scheduler;
   return effectFn;
 }
 
@@ -53,5 +59,12 @@ export function trigger(target, key) {
   if (!depsMap) return;
   const deps = depsMap.get(key);
   if (!deps) return;
-  deps.forEach((dep) => dep());
+
+  deps.forEach((effectFn) => {
+    if (effectFn.scheduler) {
+      effectFn.scheduler();
+    } else {
+      effectFn();
+    }
+  });
 }
