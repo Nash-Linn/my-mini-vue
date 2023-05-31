@@ -18,3 +18,18 @@ export function isArray(target) {
 export function isFunction(target) {
   return typeof target === "function";
 }
+
+//判断是否是字符串
+export function isString(target) {
+  return typeof target === "string";
+}
+
+//判断是否是数字
+export function isNumber(target) {
+  return typeof target === "number";
+}
+
+//判断是否是布尔值
+export function isBoolean(target) {
+  return typeof target === "boolean";
+}
