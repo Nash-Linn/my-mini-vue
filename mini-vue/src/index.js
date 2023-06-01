@@ -3,8 +3,6 @@ import { effect } from "./reactive/effect";
 import { reactive } from "./reactive/reactive";
 import { ref } from "./reactive/ref";
 
-import { render, h, Text, Fragment } from "./runtime";
-
 //---------------------------------------------------------
 // const observed = (window.observed = reactive({
 //   count: 0,
@@ -70,6 +68,7 @@ import { render, h, Text, Fragment } from "./runtime";
 // }));
 
 //---------------------------------------------------------
+import { renderBase, h, Text, Fragment } from "./runtime";
 
 const vnode = h(
   "div",
@@ -97,4 +96,27 @@ const vnode = h(
   ]
 );
 
-render(vnode, document.body);
+// renderBase(vnode, document.body);
+
+//---------------------------------------------------------
+import { render } from "./runtime";
+
+render(
+  h("ul", null, [
+    h("li", null, "first"),
+    h(Fragment, null, []),
+    h("li", null, "last"),
+  ]),
+  document.body
+);
+
+setTimeout(() => {
+  render(
+    h("ul", null, [
+      h("li", { style: { color: "blue" } }, "first"),
+      h(Fragment, null, [h("li", null, "middle")]),
+      h("li", { style: { color: "red" } }, "last"),
+    ]),
+    document.body
+  );
+}, 2000);
