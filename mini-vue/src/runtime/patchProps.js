@@ -7,6 +7,9 @@ export function patchProps(oldProps, newProps, el) {
   oldProps = oldProps || {}; //如果oldProps为null，则将其赋值为空对象
   newProps = newProps || {};
   for (const key in newProps) {
+    if (key === "key") {
+      continue;
+    }
     const next = newProps[key];
     const prev = oldProps[key];
     if (prev !== next) {
@@ -15,7 +18,7 @@ export function patchProps(oldProps, newProps, el) {
   }
   //移除oldProps中newProps中没有的属性
   for (const key in oldProps) {
-    if (newProps[key] == null) {
+    if (key !== "key" && newProps[key] == null) {
       patchDomProps(oldProps[key], null, key, el);
     }
   }

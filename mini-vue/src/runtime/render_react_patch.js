@@ -194,7 +194,7 @@ function patchUnkeyedChildren(prevChildren, vnodeChildren, container, anchor) {
 }
 
 // 优化 根据key决定是否重新渲染
-function patchKeyedChildren1(prevChildren, vnodeChildren, container, anchor) {
+function patchKeyedChildren(prevChildren, vnodeChildren, container, anchor) {
   const map = new Map();
   prevChildren.forEach(prev, (j) => {
     map.set(prev.key, { prev, j });
@@ -217,170 +217,38 @@ function patchKeyedChildren1(prevChildren, vnodeChildren, container, anchor) {
     } else {
       patch(null, next, container, curAnchor);
     }
+    // let find = false;
+    // for (let j = 0; j < prevChildren.length; j++) {
+    //   const prev = prevChildren[j];
+    //   if (prev.key === next.key) {
+    //     find = true;
+    //     patch(prev, next, container, anchor);
+    //     if (j < maxNewIndexSoFar) {
+    //       // 移动
+    //       const curAnchor = vnodeChildren[i - 1].el.nextSibling;
+    //       container.insertBefore(next.el, curAnchor);
+    //     } else {
+    //       maxNewIndexSoFar = j;
+    //     }
+    //     break;
+    //   }
+    // }
+    // if (!find) {
+    //   const curAnchor =
+    //     i === 0 ? prevChildren[0].el : vnodeChildren[i - 1].el.nextSibling;
+    //   patch(null, next, container, curAnchor);
+    // }
   }
 
   map.forEach(({ prev }) => {
     unmount(prev);
   });
+
+  // for (let i = 0; i < prevChildren.length; i++) {
+  //   const prev = prevChildren[i];
+  //   const item = vnodeChildren.find((next) => next.key === prev.key);
+  //   if (!item) {
+  //     unmount(prev);
+  //   }
+  // }
 }
-
-function patchKeyedChildren(prevChildren, vnodeChildren, container, anchor) {
-  let i = 0;
-  let e1 = prevChildren.length - 1;
-  let e2 = vnodeChildren.length - 1;
-  //1.从左至右依次比较
-  while (i <= e1 && i <= e2 && prevChildren[i].key === vnodeChildren[i].key) {
-    patch(prevChildren[i], vnodeChildren[i], container, anchor);
-    i++;
-  }
-
-  //2.从右至左依次比较
-  while (i <= e1 && i <= e2 && prevChildren[e1].key === vnodeChildren[e2].key) {
-    patch(prevChildren[e1], vnodeChildren[e2], container, anchor);
-    e1--;
-    e2--;
-  }
-  //3. 经过1，2直接将旧节点比对完，则剩下的新节点直接mount
-  if (i > e1) {
-    for (let j = i; j <= e2; j++) {
-      const nextPos = e2 + 1;
-      const curAnchor =
-        (vnodeChildren[nextPos] && vnodeChildren[nextPos].el) || anchor;
-
-      patch(null, vnodeChildren[j], container, curAnchor);
-    }
-  } else if (i > e2) {
-    //3. 经过1，2直接将新节点比对完，则剩下的旧节点直接unmount
-    for (let j = i; j <= e1; j++) {
-      unmount(prevChildren[j]);
-    }
-  } else {
-    //4.若不满足 3，采用传统diff算法，但不真的添加和移动，只做标记和删除
-    const map = new Map();
-    for (let j = i; j <= e1; j++) {
-      const prev = prevChildren[j];
-      map.set(prev.key, { prev, j });
-    }
-
-    let maxNewIndexSoFar = 0;
-    let move = false;
-    const source = new Array(e2 - i + 1).fill(-1);
-    const toMounted = [];
-    for (let k = 0; k < source.length; k++) {
-      const next = vnodeChildren[k + i];
-      const curAnchor =
-        k === 0 ? prevChildren[0].el : vnodeChildren[k - 1].el.nextSibling;
-      if (map.has(next.key)) {
-        const { prev, j } = map.get(next.key);
-        patch(prev, next, container, anchor);
-        if (j < maxNewIndexSoFar) {
-          move = true;
-        } else {
-          maxNewIndexSoFar = j;
-        }
-        source[k] = j;
-        map.delete(next.key);
-      } else {
-        //
-        toMounted.push(k + i);
-      }
-    }
-
-    map.forEach(({ prev }) => {
-      unmount(prev);
-    });
-    if (move) {
-      // 5. 需要移动，采用最长上升子序列算法
-      const seq = getSequence(source);
-      let j = seq.length - 1;
-      for (let k = source.length - 1; k >= 0; k--) {
-        if (source[k] === -1) {
-          //mount
-          const pos = k + i;
-          const nextPos = pos + 1;
-          const curAnchor =
-            (vnodeChildren[nextPos] && vnodeChildren[nextPos].el) || anchor;
-          patch(null, vnodeChildren[pos], container, curAnchor);
-        } else if (seq[j] === k) {
-          //不用移动
-          j--;
-        } else {
-          //移动
-          const pos = k + i;
-          const nextPos = pos + 1;
-          const curAnchor =
-            (vnodeChildren[nextPos] && vnodeChildren[nextPos].el) || anchor;
-          container.insertBefore(vnodeChildren[pos].el, curAnchor);
-        }
-      }
-    } else if (toMounted.length) {
-      //特殊情况，不需要移动，但还有未添加的元素
-      for (let k = toMounted.length - 1; k >= 0; k--) {
-        const pos = toMounted[k];
-        const nextPos = pos + 1;
-        const curAnchor =
-          (vnodeChildren[nextPos] && vnodeChildren[nextPos].el) || anchor;
-        patch(null, vnodeChildren[pos], container, curAnchor);
-      }
-    }
-  }
-}
-
-//最长上升子序列算法
-function getSequence(nums) {
-  const arr = [nums[0]];
-  const position = [0];
-  for (let i = 1; i < nums.length; i++) {
-    if (nums[i] === -1) {
-      continue;
-    }
-    if (nums[i] > arr[arr.length - 1]) {
-      arr.push(nums[i]);
-      position.push(arr.length - 1);
-    } else {
-      let left = 0;
-      let right = arr.length - 1;
-      while (left < right) {
-        const mid = (left + right) >> 1;
-        if (arr[mid] < nums[i]) {
-          left = mid + 1;
-        } else {
-          right = mid;
-        }
-      }
-      arr[left] = nums[i];
-      position.push(left);
-    }
-  }
-  let cur = arr.length - 1;
-  for (let i = position.length - 1; i >= 0 && cur >= 0; i--) {
-    if (position[i] === cur) {
-      arr[cur] = i;
-      cur--;
-    }
-  }
-  return arr;
-}
-
-// leetcode -- 300. 最长递增子序列
-var lengthOfLIS = function (nums) {
-  const arr = [nums[0]];
-  for (let i = 1; i < nums.length; i++) {
-    if (nums[i] > arr[arr.length - 1]) {
-      arr.push(nums[i]);
-    } else {
-      let left = 0;
-      let right = arr.length - 1;
-      while (left < right) {
-        const mid = (left + right) >> 1;
-        if (arr[mid] < nums[i]) {
-          left = mid + 1;
-        } else {
-          right = mid;
-        }
-      }
-      arr[left] = nums[i];
-    }
-  }
-  return arr.length;
-};
