@@ -1,3 +1,4 @@
+import { mounteComponent } from "./component";
 import { patchProps } from "./patchProps";
 import { ShapeFlags } from "./vnode";
 
@@ -25,9 +26,24 @@ function unmount(vnode) {
   }
 }
 
-function unmountComponent(vnode) {}
+function unmountComponent(vnode) {
+  unmount(vnode.component.subTree);
+}
 
-function processComponent(prevVNode, vnode, container, anchor) {}
+function processComponent(prevVNode, vnode, container, anchor) {
+  if (prevVNode) {
+    //shouldComponentUpdate 可以增加是否需要被动更新的判断
+    updateComponent(prevVNode, vnode);
+  } else {
+    mounteComponent(vnode, container, anchor, patch);
+  }
+}
+
+function updateComponent(prevVNode, vnode) {
+  vnode.component = prevVNode.component;
+  vnode.component.next = vnode;
+  vnode.component.update();
+}
 
 function processText(prevVNode, vnode, container, anchor) {
   if (prevVNode) {

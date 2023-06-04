@@ -1,4 +1,4 @@
-import { isArray, isNumber, isString } from "../utils";
+import { isArray, isNumber, isObject, isString } from "../utils";
 
 export const ShapeFlags = {
   ELEMENT: 1, // 0000000000000001
@@ -49,5 +49,17 @@ export function h(type, props, children) {
     el: null,
     anchor: null,
     key: props && props.key,
+    component: null, //用于存储组件的实例
   };
+}
+
+export function normolizeVNode(result) {
+  if (isArray(result)) {
+    return h(Fragment, null, result);
+  }
+  if (isObject(result)) {
+    return result;
+  }
+  //string,number
+  return h(Text, null, result.toString());
 }

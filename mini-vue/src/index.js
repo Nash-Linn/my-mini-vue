@@ -68,55 +68,146 @@ import { ref } from "./reactive/ref";
 // }));
 
 //---------------------------------------------------------
-import { renderBase, h, Text, Fragment } from "./runtime";
+// import { renderBase, h, Text, Fragment } from "./runtime";
 
-const vnode = h(
-  "div",
-  {
-    class: "a b",
-    style: {
-      border: "1px solid ",
-      fontSize: "14px",
-    },
-    onClick: () => {
-      console.log("click");
-    },
-    id: "foo",
-    checked: "",
-    custom: false,
-  },
-  [
-    h("ul", null, [
-      h("li", { style: { color: "red" } }, "1"),
-      h("li", null, "2"),
-      h("li", { style: { color: "blue" } }, "3"),
-      h(Fragment, null, [h("li", null, "4"), h("li")]),
-      h("li", null, [h(Text, null, "hello world")]), // span is not a valid child of ul
-    ]),
-  ]
-);
+// const vnode = h(
+//   "div",
+//   {
+//     class: "a b",
+//     style: {
+//       border: "1px solid ",
+//       fontSize: "14px",
+//     },
+//     onClick: () => {
+//       console.log("click");
+//     },
+//     id: "foo",
+//     checked: "",
+//     custom: false,
+//   },
+//   [
+//     h("ul", null, [
+//       h("li", { style: { color: "red" } }, "1"),
+//       h("li", null, "2"),
+//       h("li", { style: { color: "blue" } }, "3"),
+//       h(Fragment, null, [h("li", null, "4"), h("li")]),
+//       h("li", null, [h(Text, null, "hello world")]), // span is not a valid child of ul
+//     ]),
+//   ]
+// );
 
 // renderBase(vnode, document.body);
 
 //---------------------------------------------------------
-import { render } from "./runtime";
+// import { render } from "./runtime";
 
-render(
-  h("ul", null, [
-    h("li", null, "first"),
-    h(Fragment, null, []),
-    h("li", null, "last"),
-  ]),
-  document.body
-);
+// render(
+//   h("ul", null, [
+//     h("li", null, "first"),
+//     h(Fragment, null, []),
+//     h("li", null, "last"),
+//   ]),
+//   document.body
+// );
 
-setTimeout(() => {
-  render(
-    h("ul", null, [
-      h("li", { style: { color: "blue" } }, "first"),
-      h(Fragment, null, [h("li", null, "middle")]),
-      h("li", { style: { color: "red" } }, "last"),
-    ]),
-    document.body
-  );
-}, 2000);
+// setTimeout(() => {
+//   render(
+//     h("ul", null, [
+//       h("li", { style: { color: "blue" } }, "first"),
+//       h(Fragment, null, [h("li", null, "middle")]),
+//       h("li", { style: { color: "red" } }, "last"),
+//     ]),
+//     document.body
+//   );
+// }, 2000);
+
+//---------------------------------------------------------
+// import { render, h, nextTick } from "./runtime";
+
+// const Comp = {
+//   props: ["foo"],
+//   render(ctx) {
+//     return h("div", { class: "a", id: ctx.bar }, ctx.foo);
+//   },
+// };
+
+// const vnodeProps = {
+//   foo: "foo",
+//   bar: "bar",
+// };
+// const vnode = h(Comp, vnodeProps);
+// render(vnode, document.body);
+
+// const Comp = {
+//   setup() {
+//     const count = ref(0);
+//     const add = () => {
+//       count.value++;
+//       count.value++;
+//       count.value++;
+//     };
+//     return {
+//       count,
+//       add,
+//     };
+//   },
+//   render(ctx) {
+//     return [
+//       h("div", { id: "div" }, ctx.count.value),
+//       h(
+//         "button",
+//         {
+//           id: "btn",
+//           onClick: ctx.add,
+//         },
+//         "add"
+//       ),
+//     ];
+//   },
+// };
+
+// const vnodeProps = {
+//   foo: "foo",
+//   bar: "bar",
+// };
+// const vnode = h(Comp);
+// render(vnode, document.body);
+
+// const div = document.getElementById("div");
+// const btn = document.getElementById("btn");
+// console.log(div.innerHTML);
+// btn.click();
+// nextTick(() => {
+//   console.log(div.innerHTML);
+// });
+
+//---------------------------------------------------------
+import { render, h, nextTick, createApp } from "./runtime";
+
+createApp({
+  setup() {
+    const count = ref(0);
+    const add = () => {
+      count.value++;
+      count.value++;
+      count.value++;
+    };
+    return {
+      count,
+      add,
+    };
+  },
+  render(ctx) {
+    return [
+      h("div", { id: "div" }, ctx.count.value),
+      h(
+        "button",
+        {
+          id: "btn",
+          onClick: ctx.add,
+        },
+        "add"
+      ),
+    ];
+  },
+}).mount(document.body);
