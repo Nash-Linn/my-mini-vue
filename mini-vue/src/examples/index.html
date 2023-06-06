@@ -7,6 +7,46 @@
   <title>example</title>
 </head>
 <body>
+  <div class="content">
+    <div class="left">
+      <textarea class="textarea" ></textarea>
+    </div>
+    <div class="right"></div>
+  </div>
   <script src="../dist/mini-vue.js"></script>
+
+  <script>
+    const textarea = document.querySelector('.textarea')
+    const right = document.querySelector('.right')
+
+    const temp =MiniVue.ref()
+
+    textarea.addEventListener('input',function(e){
+      temp.value = e.target.value
+
+      right.innerHTML =MiniVue.compile(temp.value)  
+    })
+
+  </script>
+
+  <style>
+    .content{
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .left,.right{
+      width: calc(50% - 10px);
+      height: 100%;
+      border: 1px solid;
+    }
+
+    .textarea{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </body>
 </html>

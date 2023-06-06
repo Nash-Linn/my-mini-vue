@@ -1,3 +1,4 @@
+import { camelize } from "../utils";
 import { NodeTypes, ElementTypes, createRoot } from "./ast";
 import { isVoidTag, isNativeTag } from "./index";
 
@@ -39,7 +40,38 @@ function parseChildren(context) {
     }
     nodes.push(node);
   }
-  return nodes;
+
+  let removedWhitespace = false;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    if (node.type === NodeTypes.TEXT) {
+      // 区分文本节点是否全是空白、
+      if (/[^\t\r\f\n ]/.test(node.content)) {
+        // 文本节点有一些字符
+        node.content = node.content.replace(/[\t\r\f\n ]+/g, " ");
+      } else {
+        // 文本节点全是空白
+        const prev = nodes[i - 1];
+        const next = nodes[i + 1];
+        if (
+          !prev ||
+          !next ||
+          (prev.type === NodeTypes.ELEMENT &&
+            next.type === NodeTypes.ELEMENT &&
+            /[\r\n]/.test(node.content))
+        ) {
+          // 删除空白节点
+          removedWhitespace = true;
+          nodes[i] = null;
+        } else {
+          node.content = " ";
+        }
+      }
+    }
+  }
+
+  return removedWhitespace ? nodes.filter(Boolean) : nodes;
 }
 
 //解析插值节点
@@ -116,9 +148,9 @@ function parseAttributes(context) {
   const directives = [];
 
   while (
-    context.source.length ||
-    context.source.startsWith(">") ||
-    context.source.startsWith("/>")
+    context.source.length &&
+    !context.source.startsWith(">") &&
+    !context.source.startsWith("/>")
   ) {
     let attr = parseAttribute(context);
     if (attr.type === NodeTypes.DIRECTIVE) {
@@ -136,42 +168,43 @@ function parseAttributes(context) {
 
 function parseAttribute(context) {
   const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source);
-  const name = match[0];
-
-  advanceBy(context, name.length);
+  const name = match?.[0];
+  advanceBy(context, name?.length);
   advanceSpaces(context);
-
   let value;
   if (context.source[0] === "=") {
     advanceBy(context, 1);
     advanceSpaces(context);
     value = parseAttributeValue(context);
+    advanceSpaces(context);
   }
 
   // Directive
   if (/^(:|@|v-)/.test(name)) {
+    let dirName, argContent;
     if (name[0] === ":") {
+      dirName = "bind";
+      argContent = name.slice(1);
     } else if (name[0] === "@") {
+      dirName = "on";
+      argContent = name.slice(1);
     } else if (name.startsWith("v-")) {
+      [dirName, argContent] = name.slice(2).split(":");
     }
 
     return {
       type: NodeTypes.DIRECTIVE,
-      name,
-      exp:
-        undefined |
-        {
-          type: NodeTypes.SIMPLE_EXPRESSION, //表达式节点
-          content: value.content,
-          isStatic: false,
-        },
-      arg:
-        undefined |
-        {
-          type: NodeTypes.SIMPLE_EXPRESSION,
-          content: string,
-          isStatic: true,
-        },
+      name: dirName,
+      exp: value && {
+        type: NodeTypes.SIMPLE_EXPRESSION, //表达式节点
+        content: value.content,
+        isStatic: false,
+      },
+      arg: argContent && {
+        type: NodeTypes.SIMPLE_EXPRESSION,
+        content: camelize(argContent),
+        isStatic: true,
+      },
     };
   }
 
@@ -187,7 +220,7 @@ function parseAttribute(context) {
 }
 
 function parseAttributeValue(context) {
-  const quote = context[0];
+  const quote = context.source[0];
   advanceBy(context, 1); // 去除属性开始的 引号
 
   const endIndex = context.source.indexOf(quote);

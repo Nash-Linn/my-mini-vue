@@ -33,3 +33,8 @@ export function isNumber(target) {
 export function isBoolean(target) {
   return typeof target === "boolean";
 }
+
+//驼峰化
+export function camelize(str) {
+  return str.replace(/-(\w)/g, (_, c) => (c ? c.toUpperCase() : ""));
+}
