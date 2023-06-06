@@ -1,3 +1,4 @@
+import { compile } from "../compiler/compile.js";
 import { effect } from "../reactive/effect.js";
 import { reactive } from "../reactive/reactive.js";
 import { queueJob } from "./scheduler.js";
@@ -51,6 +52,16 @@ export function mounteComponent(vnode, container, anchor, patch) {
     ...instance.props,
     ...instance.setupState,
   };
+
+  if (!Component.render && Component.template) {
+    let { template } = Component;
+    if (template[0] === "#") {
+      const el = document.querySelector(template);
+      template = el ? el.innerHTML : "";
+    }
+    const code = compile(template);
+    Component.render = new Function("ctx", code);
+  }
 
   instance.update = effect(
     () => {
