@@ -5,7 +5,7 @@ export { renderBase } from "./render_base";
 
 export { queueJob, nextTick } from "./scheduler";
 
-export { createApp } from "./createApp";
+export { createApp, resolveComponent } from "./createApp";
 
 export { renderList } from "./helpers/renderList";
 export { withModel } from "./helpers/vModel";

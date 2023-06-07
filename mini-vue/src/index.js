@@ -8,6 +8,8 @@ import {
   Fragment,
   renderList,
   nextTick,
+  resolveComponent,
+  withModel,
 } from "./runtime";
 
 import { reactive, ref, computed, effect } from "./reactive/index.js";
@@ -25,4 +27,6 @@ export const MiniVue = (window.MiniVue = {
   computed,
   effect,
   compile,
+  resolveComponent,
+  withModel,
 });

@@ -12,8 +12,18 @@
   
   <div id="app">
      Counter
-    <div v-for="(item, index) in 3" :key="index">{{counter.value}}</div>
-    <button @click="add">"click"</button>
+    <div>{{counter.value}}</div>
+    <button @click="add">+</button>
+
+    <ul>
+      <li v-for="item in items" :key="item.name">{{item.name}}</li>
+    </ul>
+
+    <div v-if="ok.value">ok</div>
+    <div v-else>!ok</div>
+
+    <button @click="toggle">ok toggle</button>
+
   </div>
 
   <!-- <script type="text/template" id="template">
@@ -23,16 +33,31 @@
   </script> -->
 
   <script>
-    const {createApp,ref} = MiniVue
+    const {createApp,ref,reactive} = MiniVue
 
     createApp({
       // template: `#template`,
       setup(){
+        const items = reactive([
+          {
+            name:'foo'
+          },
+          {
+            name:'bar'
+          }
+        ])
         const  counter = ref(0)
         const add = ()=>  counter.value++
+
+        const ok = ref(true)
+        const toggle = ()=> ok.value = !ok.value
+
         return {
+          items,
           counter,
-          add
+          add,
+          ok,
+          toggle
         }
       },
     }).mount('#app')
